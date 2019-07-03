@@ -5,33 +5,40 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex'
+  import { ebookMixin } from '../../utils/mixin'
   import Epub from 'epubjs'
   global.ePub = Epub
   export default {
     name: 'EbookReader',
-    computed: {
-      ...mapGetters(['fileName'])
-    },
+    mixins: [ebookMixin],
     methods: {
       prePage () {
         if (this.rendition) {
+          this.hideTitleAndMenu()
           this.rendition.prev()
         }
       },
 
-      nextPage(){
+      nextPage () {
         if (this.rendition) {
+          this.hideTitleAndMenu()
           this.rendition.next()
         }
       },
       toggleTitleAndMenu () {
-
+        if (this.menuVisible) {
+          this.setSettingVisible(-1)
+        }
+        this.setMenuVisible(!this.menuVisible)
       },
-
+      hideTitleAndMenu () {
+        this.setSettingVisible(-1)
+        this.setMenuVisible(false)
+      },
       initEpub () {
         const url = `http://localhost:3004/${this.fileName}.epub`
         this.book = new Epub(url)
+        this.setCurrentBook(this.book)
         this.rendition = this.book.renderTo('read', {
           width: innerWidth,
           height: innerHeight,
@@ -62,7 +69,7 @@
     mounted () {
       // const baseUrl = "http://localhost:3004/epub/2015_Book_PlantSelectionForBioretentionS.epub"
       const fileName = this.$route.params.fileName.split('|').join('/')
-      this.$store.dispatch('setFileName', fileName).then(() => {
+      this.setFileName(fileName).then(() => {
         this.initEpub()
       })
     }
